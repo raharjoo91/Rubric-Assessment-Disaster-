@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Assessment Rubric System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .project-selector {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .project-selector label {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .project-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .project-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+
+        .project-btn.literature {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+
+        .project-btn.community {
+            background: linear-gradient(135deg, #4ecdc4, #26d0ce);
+            color: white;
+        }
+
+        .project-btn.video {
+            background: linear-gradient(135deg, #a8e6cf, #56ab91);
+            color: white;
+        }
+
+        .project-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .project-btn.active {
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+
+        .group-info {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border-left: 5px solid #3498db;
+        }
+
+        .group-info h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-field label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .info-field input, .info-field select {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .info-field input:focus, .info-field select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .members-section {
+            margin-top: 20px;
+        }
+
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .member-field {
+            display: flex;
+            gap: 10px;
+        }
+
+        .member-field input {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 0.95em;
+        }
+
+        .rubric-section {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .rubric-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .criterion {
+            background: #ffffff;
+            border: 2px solid #e8ecf3;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .criterion:hover {
+            border-color: #3498db;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.1);
+        }
+
+        .criterion-header {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .criterion-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .criterion-description {
+            color: #6c757d;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .criterion-weight {
+            background: #007bff;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .scoring-section {
+            padding: 20px;
+        }
+
+        .score-ranges {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .score-range {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+        }
+
+        .score-range.good { border-left-color: #17a2b8; }
+        .score-range.fair { border-left-color: #ffc107; }
+        .score-range.poor { border-left-color: #dc3545; }
+
+        .range-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .range-title {
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        .range-points {
+            background: rgba(0,0,0,0.1);
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .range-description {
+            font-size: 0.9em;
+            color: #555;
+            line-height: 1.4;
+        }
+
+        .score-input-section {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            text-align: center;
+        }
+
+        .score-input-label {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .score-input {
+            width: 120px;
+            padding: 12px;
+            font-size: 1.5em;
+            font-weight: 700;
+            text-align: center;
+            border: 3px solid #e0e0e0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .score-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        .score-input.excellent { border-color: #28a745; background: rgba(40, 167, 69, 0.1); }
+        .score-input.good { border-color: #17a2b8; background: rgba(23, 162, 184, 0.1); }
+        .score-input.fair { border-color: #ffc107; background: rgba(255, 193, 7, 0.1); }
+        .score-input.poor { border-color: #dc3545; background: rgba(220, 53, 69, 0.1); }
+
+        .score-feedback {
+            margin-top: 10px;
+            font-size: 0.9em;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .score-feedback.show { display: block; }
+        .score-feedback.excellent { background: rgba(40, 167, 69, 0.2); color: #155724; }
+        .score-feedback.good { background: rgba(23, 162, 184, 0.2); color: #0c5460; }
+        .score-feedback.fair { background: rgba(255, 193, 7, 0.2); color: #856404; }
+        .score-feedback.poor { background: rgba(220, 53, 69, 0.2); color: #721c24; }
+
+        .results-section {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+            text-align: center;
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+        }
+
+        .results-section h3 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .score-display {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .score-item {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 10px;
+            min-width: 150px;
+            backdrop-filter: blur(10px);
+        }
+
+        .score-item h4 {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .score-item .value {
+            font-size: 2.2em;
+            font-weight: 700;
+        }
+
+        .detailed-breakdown {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .breakdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .export-btn {
+            padding: 15px 30px;
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+
+        .export-btn:hover {
+            background: white;
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .grade-indicator {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .grade-a { background: rgba(40, 167, 69, 0.3); }
+        .grade-b { background: rgba(23, 162, 184, 0.3); }
+        .grade-c { background: rgba(255, 193, 7, 0.3); }
+        .grade-d { background: rgba(220, 53, 69, 0.3); }
+
+        .comments-section {
+            margin-top: 30px;
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+        }
+
+        .comments-section h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .comments-section textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            line-height: 1.5;
+            resize: vertical;
+        }
+
+        .comments-section textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        @media (max-width: 768px) {
+            .project-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .score-display {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .export-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .members-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .score-input {
+                width: 100px;
+                font-size: 1.3em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Project Assessment Rubric</h1>
+            <p>Comprehensive evaluation system for disaster management group projects</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Group Information -->
+            <div class="group-info">
+                <h3>Group & Project Information</h3>
+                <div class="info-grid">
+                    <div class="info-field">
+                        <label for="groupName">Group Name/Number</label>
+                        <input type="text" id="groupName" placeholder="Enter group name or number">
+                    </div>
+                    <div class="info-field">
+                        <label for="courseName">Course</label>
+                        <input type="text" id="courseName" value="Disaster Management" readonly>
+                    </div>
+                    <div class="info-field">
+                        <label for="assessmentDate">Assessment Date</label>
+                        <input type="date" id="assessmentDate">
+                    </div>
+                    <div class="info-field">
+                        <label for="assessorName">Assessor Name</label>
+                        <input type="text" id="assessorName" placeholder="Enter assessor name">
+                    </div>
+                    <div class="info-field">
+                        <label for="memberCount">Number of Members</label>
+                        <select id="memberCount" onchange="updateMemberFields()">
+                            <option value="5">5 members</option>
+                            <option value="6">6 members</option>
+                            <option value="7">7 members</option>
+                            <option value="8">8 members</option>
+                            <option value="9">9 members</option>
+                            <option value="10">10 members</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="members-section">
+                    <h4>Group Members (Optional)</h4>
+                    <div class="members-grid" id="membersGrid">
+                        <!-- Member fields will be generated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Type Selection -->
+            <div class="project-selector">
+                <label>Select Project Type:</label>
+                <div class="project-buttons">
+                    <button class="project-btn literature" onclick="selectProject('literature')">
+                        Literature Review
+                    </button>
+                    <button class="project-btn community" onclick="selectProject('community')">
+                        Community Outreach
+                    </button>
+                    <button class="project-btn video" onclick="selectProject('video')">
+                        Educational Video
+                    </button>
+                </div>
+            </div>
+
+            <!-- Literature Review Rubric -->
+            <div id="literature-rubric" class="rubric-section">
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <div class="criterion-title">Introduction & Background</div>
+                        <div class="criterion-description">Quality of general background, specific context, problem statement, literature review for gap identification, gap description, significance of findings, and clear research objectives</div>
+                        <div class="criterion-weight">Weight: 20%</div>
+                    </div>
+                    <div class="scoring-section">
+                        <div class="score-ranges">
+                            <div class="score-range">
+                                <div class="range-header">
+                                    <span class="range-title">Excellent</span>
+                                    <span class="range-points">85-100 points</span>
+                                </div>
+                                <div class="range-description">Comprehensive background with clear context, well-defined problem statement, systematic gap identification, significant findings clearly articulated, and precise research objectives</div>
+                            </div>
+                            <div class="score-range good">
+                                <div class="range-header">
+                                    <span class="range-title">Good</span>
+                                    <span class="range-points">70-84 points</span>
+                                </div>
+                                <div class="range-description">Good background with adequate context, clear problem statement, identifiable gaps, relevant findings, and clear objectives</div>
+                            </div>
+                            <div class="score-range fair">
+                                <div class="range-header">
+                                    <span class="range-title">Fair</span>
+                                    <span class="range-points">55-69 points</span>
+                                </div>
+                                <div class="range-description">Basic background, somewhat unclear problem statement, limited gap identification, minimal significance shown, and vague objectives</div>
+                            </div>
+                            <div class="score-range poor">
+                                <div class="range-header">
+                                    <span class="range-title">Poor</span>
+                                    <span class="range-points">0-54 points</span>
+                                </div>
+                                <div class="range-description">Inadequate background, no clear problem statement, gaps not identified, insignificant findings, and unclear or missing objectives</div>
+                            </div>
+                        </div>
+                        <div class="score-input-section">
+                            <label class="score-input-label">Enter Score (0-100):</label>
+                            <input type="number" class="score-input" data-criterion="lit_introduction" data-weight="20" min="0" max="100" placeholder="0-100" oninput="updateScore(this)">
+                            <div class="score-feedback" id="feedback_lit_introduction"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <div class="criterion-title">Methodology & Search Strategy</div>
+                        <div class="criterion-description">Clear methodology selection (narrative/systematic/scoping review), database selection, search terms, inclusion/exclusion criteria, selection process, and systematic approach</div>
+                        <div class="criterion-weight">Weight: 25%</div>
+                    </div>
+                    <div class="scoring-section">
+                        <div class="score-ranges">
+                            <div class="score-range">
+                                <div class="range-header">
+                                    <span class="range-title">Excellent</span>
+                                    <span class="range-points">85-100 points</span>
+                                </div>
+                                <div class="range-description">Appropriate methodology selection with clear justification, comprehensive database coverage, systematic search strategy, well-defined inclusion/exclusion criteria, and transparent selection process</div>
+                            </div>
+                            <div class="score-range good">
+                                <div class="range-header">
+                                    <span class="range-title">Good</span>
+                                    <span class="range-points">70-84 points</span>
+                                </div>
+                                <div class="range-description">Good methodology choice with some justification, adequate database selection, reasonable search terms, appropriate criteria, and clear process</div>
+                            </div>
+                            <div class="score-range fair">
+                                <div class="range-header">
+                                    <span class="range-title">Fair</span>
+                                    <span class="range-points">55-69 points</span>
+                                </div>
+                                <div class="range-description">Basic methodology with limited justification, few databases used, simple search terms, unclear criteria, and inconsistent process</div>
+                            </div>
+                            <div class="score-range poor">
+                                <div class="range-header">
+                                    <span class="range-title">Poor</span>
+                                    <span class="range-points">0-54 points</span>
+                                </div>
+                                <div class="range-description">Inappropriate methodology, insufficient databases, poor search strategy, no clear criteria, and unclear or missing process description</div>
+                            </div>
+                        </div>
+                        <div class="score-input-section">
+                            <label class="score-input-label">Enter Score (0-100):</label>
+                            <input type="number" class="score-input" data-criterion="lit_methodology" data-weight="25" min="0" max="100" placeholder="0-100" oninput="updateScore(this)">
+                            <div class="score-feedback" id="feedback_lit_methodology"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <div class="criterion-title">Results & Analysis</div>
+                        <div class="criterion-description">Quality of literature synthesis, thematic analysis, data extraction, findings presentation, identification of patterns, and evidence quality assessment</div>
+                        <div class="criterion-weight">Weight: 25%</div>
+                    </div>
+                    <div class="scoring-section">
+                        <div class="score-ranges">
+                            <div class="score-range">
+                                <div class="range-header">
+                                    <span class="range-title">Excellent</span>
+                                    <span class="range-points">85-100 points</span>
+                                </div>
+                                <div class="range-description">Comprehensive literature synthesis with excellent thematic analysis, systematic data extraction, clear findings presentation, and strong pattern identification with quality assessment</div>
+                            </div>
+                            <div class="score-range good">
+                                <div class="range-header">
+                                    <span class="range-title">Good</span>
+                                    <span class="range-points">70-84 points</span>
+                                </div>
+                                <div class="range-description">Good synthesis with adequate thematic analysis, reasonable data extraction, clear findings presentation, and some patterns identified</div>
+                            </div>
+                            <div class="score-range fair">
+                                <div class="range-header">
+                                    <span class="range-title">Fair</span>
+                                    <span class="range-points">55-69 points</span>
+                                </div>
+                                <div class="range-description">Basic synthesis with limited analysis, incomplete data extraction, unclear findings presentation, and few patterns identified</div>
+                            </div>
+                            <div class="score-range poor">
+                                <div class="range-header">
+                                    <span class="range-title">Poor</span>
+                                    <span class="range-points">0-54 points</span>
+                                </div>
+                                <div class="range-description">Poor synthesis with minimal analysis, inadequate data extraction, confusing findings presentation, and no clear patterns identified</div>
+                            </div>
+                        </div>
+                        <div class="score-input-section">
+                            <label class="score-input-label">Enter Score (0-100):</label>
+                            <input type="number" class="score-input" data-criterion="lit_results" data-weight="25" min="0" max="100" placeholder="0-100" oninput="updateScore(this)">
+                            <div class="score-feedback" id="feedback_lit_results"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <div class="criterion-title">Discussion & Critical Analysis</div>
+                        <div class="criterion-description">Interpretation of findings, comparison with existing knowledge, implications for disaster management, limitations discussion, and critical evaluation of evidence</div>
+                        <div class="criterion-weight">Weight: 20%</div>
+                    </div>
+                    <div class="scoring-section">
+                        <div class="score-ranges">
+                            <div class="score-range">
+                                <div class="range-header">
+                                    <span class="range-title">Excellent</span>
+                                    <span class="range-points">85-100 points</span>
+                                </div>
+                                <div class="range-description">Insightful interpretation with comprehensive comparison to existing knowledge, clear implications for disaster management, honest limitations discussion, and critical evaluation of evidence quality</div>
+                            </div>
+                            <div class="score-range good">
+                                <div class="range-header">
+                                    <span class="range-title">Good</span>
+                                    <span class="range-points">70-84 points</span>
+                                </div>
+                                <div class="range-description">Good interpretation with adequate comparison, relevant implications identified, some limitations noted, and reasonable evaluation of evidence</div>
+                            </div>
+                            <div class="score-range fair">
+                                <div class="range-header">
+                                    <span class="range-title">Fair</span>
+                                    <span class="range-points">55-69 points</span>
+                                </div>
+                                <div class="range-description">Basic interpretation with limited comparison, unclear implications, few limitations discussed, and superficial evaluation</div>
+                            </div>
+                            <div class="score-range poor">
+                                <div class="range-header">
+                                    <span class="range-title">Poor</span>
+                                    <span class="range-points">0-54 points</span>
+                                </div>
+                                <div class="range-description">Poor interpretation with no comparison, irrelevant or missing implications, no limitations discussed, and uncritical evaluation or lack thereof</div>
+                            </div>
+                        </div>
+                        <div class="score-input-section">
+                            <label class="score-input-label">Enter Score (0-100):</label>
+                            <input type="number" class="score-input" data-criterion="lit_discussion" data-weight="20" min="0" max="100" placeholder="0-100" oninput="updateScore(this)">
+                            <div class="score-feedback" id="feedback_lit_discussion"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <div class="criterion-title">Conclusions & Recommendations</div>
+                        <div class="criterion-description">Well-supported conclusions, practical recommendations for policy/practice, future research directions, and overall contribution to disaster management knowledge</div>
+                        <div class="criterion-weight">Weight: 10%</div>
+                    </div>
+                    <div class="scoring-section">
+                        <div class="score-ranges">
+                            <div class="score-range">
+                                <div class="range-header">
+                                    <span class="range-title">Excellent</span>
+                                    <span class="range-points">85-100 points</span>
+                                </div>
+                                <div class="range-description">Strong evidence-based conclusions, actionable recommendations for policy and practice, clear future research directions, and significant contribution to disaster management knowledge</div>
+                            </div>
+                            <div class="score-range good">
+                                <div class="range-header">
+                                    <span class="range-title">Good</span>
+                                    <span class="range-points">70-84 points</span>
+                                </div>
+                                <div class="range-description">Good conclusions with some evidence support, relevant recommendations, some future research directions, and meaningful contribution</div>
+                            </div>
+                            <div class="score-range fair">
+                                <div class="range-header">
+                                    <span class="range-title">Fair</span>
+                                    <span class="range-points">55-69 points</span>
+                                </div>
+                                <div class="range-description">Basic conclusions with limited support, few practical recommendations, unclear future directions, and minimal contribution</div>
+                            </div>
+                            <div class="score-range poor">
+                                <div class="range-header">
+                                    <span class="range-title">Poor</span>
+                                    <span class="range-points">0-54 points</span>
+                                </div>
+                                <div class="range-description">Weak or unsupported conclusions, impractical or missing recommendations, no clear future directions, and insignificant or no contribution</div>
+                            </div>
+                        </div>
+                        <div class="score-input-section">
+                            <label class="score-input-label">Enter Score (0-100):</label>
+                            <input type="number" class="score-input" data-criterion="lit_conclusions" data-weight="10" min="0" max="100" placeholder="0-100" oninput="updateScore(this)">
+                            <div class="score-feedback" id="feedback_lit_conclusions"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Community Outreach Rubric -->
+            <div id="community-rubric" class="rubric-section">
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <div class="criterion-title">Needs Assessment & Target Analysis</div>
+                        <div class="criterion-description">Thorough community needs assessment, vulnerability analysis, target group identification, cultural sensitivity, and baseline knowledge evaluation</div>
+                        <div class="criterion-weight">Weight: 20%</div>
+                    </div>
+                    <div class="scoring-section">
+                        <div class="score-ranges">
+                            <div class="score-range">
+                                <div class="range-header">
+                                    <span class="range-title">Excellent</span>
+                                    <span class="range-points">85-100 points</span>
+                                </div>
+                                <div class="range-description">Comprehensive needs assessment with detailed vulnerability analysis, well-defined target groups, culturally sensitive approach, and thorough baseline knowledge evaluation</div>
+                            </div>
+                            <div class="score-range good">
+                                <div class="range-header">
+                                    <span class="range-title">Good</span>
+                                    <span class="range-points">70-84 points</span>
+                                </div>
+                                <div class="range-description">Good needs assessment with adequate vulnerability analysis, clear target identification, generally sensitive approach, and basic baseline evaluation</div>
+                            </div>
+                            <div class="score-range fair">
+                                <div class="range-header">
+                                    <span class="range-title">Fair</span>
+                                    <span class="range-points">55-69 points</span>
+                                </div>
+                                <div class="range-description">Basic needs assessment with limited vulnerability analysis, unclear target groups, somewhat insensitive approach, and minimal baseline evaluation</div>
+                            </div>
+                            <div class="score-range poor">
+                                <div class="range-header">
+                                    <span class="range-title">Poor</span>
+                                    <span class="range-points">0-54 points</span>
+                                </div>
+                                <div class="range-description">Inadequate or missing needs assessment, poor vulnerability analysis, inappropriate target selection, culturally insensitive approach, and no baseline evaluation</div>
+                            </div>
+                        </div>
+                        <div class="score-input-section">
+                            <label class="score-input-label">Enter Score (0-100):</label>
+                            <input type="number" class="score-input" data-criterion="comm_assessment" data-weight="20" min="0" max="100" placeholder="0-100" oninput="updateScore(this)">
+                            <div class="score-feedback" id="feedback_comm_assessment"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <div class="criterion-title">Program Design & Learning Objectives</div>
+                        <div class="criterion-description">Evidence-based program design, clear learning objectives, age-appropriate content, interactive activities, and integration of local disaster risks</div>
+                        <div class="criterion-weight">Weight: 25%</div>
+                    </div>
+                    <div class="scoring-section">
+                        <div class="score-ranges">
+                            <div class="score-range">
+                                <div class="range-header">
+                                    <span class="range-title">Excellent</span>
+                                    <span class="range-points">85-100 points</span>
+                                </div>
+                                <div class="range-description">Evidence-based program design with specific measurable learning objectives, highly age-appropriate content, engaging interactive activities, and excellent integration of local disaster risks</div>
+                            </div>
+                            <div class="score-range good">
+                                <div class="range-header">
+                                    <span class="range-title">Good</span>
+                                    <span class="range-points">70-84 points</span>
+                                </div>
+                                <div class="range-description">Good program design with clear learning objectives, appropriate content for target group, interactive elements included, and relevant to local disaster context</div>
+                            </div>
+                            <div class="score-range fair">
+                                <div class="range-header">
+                                    <span class="range-title">Fair</span>
+                                    <span class="range-points">55-69 points</span>
+                                </div>
+                                <div class="range-description">Basic program design with vague learning objectives, somewhat age-appropriate content, limited interactive elements, and partially relevant to local context</div>
+                            </div>
+                            <div class="score-range poor">
+                                <div class="range-header">
+                                    <span class="range-title">Poor</span>
+                                    <span class="range-points">0-54 points</span>
+                                </div>
+                                <div class="range-description">Poor or missing program design, unclear or missing objectives, inappropriate content for target group, no interactive elements, and irrelevant to local disaster context</div>
+                            </div>
+                        </div>
+                        <div class="score-input-section">
+                            <label class="score-input-label">Enter Score (0-100):</label>
+                            <input type="number" class="score-input" data-criterion="comm_design" data-weight="25" min="0" max="100" placeholder="0-100" oninput="updateScore(this)">
+                            <div class="score-feedback" id="feedback_comm_design"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <div class="criterion-title">Educational Materials & Resources</div>
+                        <div class="criterion-description">Quality of brochures, presentations, visual aids, hands-on materials, accessibility features, and language appropriateness</div>
+                        <div class="criterion-weight">Weight: 20%</div>
+                    </div>
+                    <div class="scoring-section">
+                        <div class="score-ranges">
+                            <div class="score-range">
+                                <div class="range-header">
+                                    <span class="range-title">Excellent</span>
+                                    <span class="range-points">85-100 points</span>
+                                </div>
+                                <div class="range-description">Professional quality materials with excellent visual design, comprehensive hands-on resources, full accessibility features, and perfectly appropriate language for target audience</div>
+                            </div>
+                            <div class="score-range good">
+                                <div class="range-header">
+                                    <span class="range-title">Good</span>
+                                    <span class="range-points">70-84 points</span>
+                                </div>
+                                <div class="range-description">Good quality materials with clear visual design, adequate hands-on resources, basic accessibility features, and appropriate language for most participants</div>
+                            </div>
+                            <div class="score-range fair">
+                                <div class="range-header">
+                                    <span class="range-title">Fair</span>
+                                    <span class="range-points">55-69 points</span>
+                                </div>
+                                <div class="range-description">Basic quality materials with unclear visual design, limited hands-on resources, few accessibility features, and somewhat inappropriate language</div>
+                            </div>
+                            <div class="score-range poor">
+                                <div class="range-header">
+                                    <span class="range-title">Poor</span>
+                                    <span class="range-points">0-54 points</span>
+                                </div>
+                                <div class="range-description">Poor quality or missing materials, confusing visual design, no hands-on resources, inaccessible design, and inappropriate language for target audience</div>
+                            </div>
+                        </div>
+                        <div class="score-input-section">
+                            <label class="score-input-label">Enter Score (0-100):</label>
+                            <input type="number" class="score-input" data-criterion="comm_materials" data-weight="20" min="0" max="100" placeholder="0-100" oninput="updateScore(this)">
+                            <div class="score-feedback" id="feedback_comm_materials"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <div class="criterion-title">Implementation & Facilitation</div>
+                        <div class="criterion-description">Effective delivery methods, participant engagement, adaptation to group dynamics, time management, and professional facilitation skills</div>
+                        <div class="criterion-weight">Weight: 25%</div>
+                    </div>
+                    <div class="scoring-section">
+                        <div class="score-ranges">
+                            <div class="score-range">
+                                <div class="range-header">
+                                    <span class="range-title">Excellent</span>
+                                    <span class="range-points">85-100 points</span>
+                                </div>
+                                <div class="range-description">Highly effective delivery with excellent participant engagement, skillful adaptation to group dynamics, perfect time management, and professional facilitation throughout</div>
+                            </div>
+                            <div class="score-range good">
+                                <div class="range-header">
+                                    <span class="range-title">Good</span>
+                                    <span class="range-points">70-84 points</span>
+                                </div>
+                                <div class="range-description">Good delivery methods with adequate participant engagement, some adaptation to group needs, good time management, and competent facilitation skills</div>
+                            </div>
+                            <div class="score-range fair">
+                                <div class="range-header">
+                                    <span class="range-title">Fair</span>
+                                    <span class="range-points">55-69 points</span>
+                                </div>
+                                <div class="range-description">Basic delivery with limited participant engagement, minimal adaptation to group dynamics, poor time management, and basic facilitation skills</div>
+                            </div>
+                            <div class="score-range poor">
+                                <div class="range-header">
+                                    <span class="range-title">Poor</span>
+                                    <span class="range-points">0-54 points</span>
+                                </div>
+                                <div class="range-description">Poor delivery methods with no participant engagement, inflexible approach, very poor time management, and inadequate facilitation skills</div>
+                            </div>
+                        </div>
+                        <div class="score-input-section">
+                            <label class="score-input-label">Enter Score (0-100):</label>
+                            <input type="number" class="score-input" data-criterion="comm_delivery" data-weight="25" min="0" max="100" placeholder="0-100" oninput="updateScore(this)">
+                            <div class="score-feedback" id="feedback_comm_delivery"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <div class="criterion-title">Evaluation & Impact Measurement</div>
+                        <div class="criterion-description">Pre/post assessment methods, feedback collection, knowledge retention measurement, behavior change indicators, and long-term impact evaluation</div>
+                        <div class="criterion-weight">Weight: 10%</div>
+                    </div>
+                    <div class="scoring-section">
+                        <div class="score-ranges">
+                            <div class="score-range">
+                                <div class="range-header">
+                                    <span class="range-title">Excellent</span>
+                                    <span class="range-points">85-100 points</span>
+                                </div>
+                                <div class="range-description">Comprehensive evaluation with systematic pre/post assessments, thorough feedback collection, measurable knowledge retention, clear behavior change indicators, and long-term impact follow-up</div>
+                            </div>
+                            <div class="score-range good">
+                                <div class="range-header">
+                                    <span class="range-title">Good</span>
+                                    <span class="range-points">70-84 points</span>
+                                </div>
+                                <div class="range-description">Good evaluation approach with adequate pre/post assessment, systematic feedback collection, some knowledge retention measurement, basic behavior indicators, and short-term follow-up</div>
+                            </div>
+                            <div class="score-range fair">
+                                <div class="range-header">
+                                    <span class="range-title">Fair</span>
+                                    <span class="range-points">55-69 points</span>
+                                </div>
+                                <div class="range-description">Basic evaluation with limited pre/post assessment, minimal feedback collection, unclear knowledge measurement, few behavior indicators, and no follow-up</div>
+                            </div>
+                            <div class="score-range poor">
+                                <div class="range-header">
+                                    <span class="range-title">Poor</span>
+                                    <span class="range-points">0-54 points</span>
+                                </div>
+                                <div class="range-description">Poor or missing evaluation, no pre/post assessment, minimal feedback collection, no measurable outcomes, no behavior indicators, and no impact assessment</div>
+                            </div>
+                        </div>
+                        <div class="score-input-section">
+                            <label class="score-input-label">Enter Score (0-100):</label>
+                            <input type="number" class="score-input" data-criterion="comm_evaluation" data-weight="10" min="0" max="100" placeholder="0-100" oninput="updateScore(this)">
+                            <div class="score-feedback" id="feedback_comm_evaluation"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video Project Rubric -->
+            <div id="video-rubric" class="rubric-section">
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <div class="criterion-title">Content Accuracy & Depth</div>
+                        <div class="criterion-description">Scientific accuracy of disaster management information, evidence-based content, appropriate depth for target audience, fact-checking, and expert validation</div>
+                        <div class="criterion-weight">Weight: 25%</div>
+                    </div>
+                    <div class="scoring-section">
+                        <div class="score-ranges">
+                            <div class="score-range">
+                                <div class="range-header">
+                                    <span class="range-title">Excellent</span>
+                                    <span class="range-points">85-100 points</span>
+                                </div>
+                                <div class="range-description">Highly accurate scientific information, thoroughly evidence-based content, perfect depth for target audience, comprehensive fact-checking, and expert validation clearly demonstrated</div>
+                            </div>
+                            <div class="score-range good">
+                                <div class="range-header">
+                                    <span class="range-title">Good</span>
+                                    <span class="range-points">70-84 points</span>
+                                </div>
+                                <div class="range-description">Accurate content with mostly evidence-based information, appropriate depth for audience, good fact-checking evident, and some expert validation</div>
+                            </div>
+                            <div class="score-range fair">
+                                <div class="range-header">
+                                    <span class="range-title">Fair</span>
+                                    <span class="range-points">55-69 points</span>
+                                </div>
+                                <div class="range-description">Mostly accurate with limited evidence basis, basic depth appropriate for some audience members, minimal fact-checking, and little validation</div>
+                            </div>
+                            <div class="score-range poor">
+                                <div class="range-header">
+                                    <span class="range-title">Poor</span>
+                                    <span class="range-points">0-54 points</span>
+                                </div>
+                                <div class="range-description">Inaccurate or misleading content, no evidence basis, inappropriate depth for target audience, no fact-checking evident, and no validation</div>
+                            </div>
+                        </div>
+                        <div class="score-input-section">
+                            <label class="score-input-label">Enter Score (0-100):</label>
+                            <input type="number" class="score-input" data-criterion="vid_content" data-weight="25" min="0" max="100" placeholder="0-100" oninput="updateScore(this)">
+                            <div class="score-feedback" id="feedback_vid_content"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <div class="criterion-title">Script & Narrative Structure</div>
+                        <div class="criterion-description">Quality of script writing, logical flow, clear messaging, storytelling techniques, call-to-action elements, and coherent narrative arc</div>
+                        <div class="criterion-weight">Weight: 20%</div>
+                    </div>
+                    <div class="scoring-section">
+                        <div class="score-ranges">
+                            <div class="score-range">
+                                <div class="range-header">
+                                    <span class="range-title">Excellent</span>
+                                    <span class="range-points">85-100 points</span>
+                                </div>
+                                <div class="range-description">Excellent script writing with perfect logical flow, crystal clear messaging, compelling storytelling techniques, strong call-to-action, and coherent narrative arc throughout</div>
+                            </div>
+                            <div class="score-range good">
+                                <div class="range-header">
+                                    <span class="range-title">Good</span>
+                                    <span class="range-points">70-84 points</span>
+                                </div>
+                                <div class="range-description">Good script quality with logical flow, clear messaging, effective storytelling elements, adequate call-to-action, and mostly coherent narrative</div>
+                            </div>
+                            <div class="score-range fair">
+                                <div class="range-header">
+                                    <span class="range-title">Fair</span>
+                                    <span class="range-points">55-69 points</span>
+                                </div>
+                                <div class="range-description">Basic script with some flow issues, unclear messaging at times, limited storytelling, weak call-to-action, and inconsistent narrative structure</div>
+                            </div>
+                            <div class="score-range poor">
+                                <div class="range-header">
+                                    <span class="range-title">Poor</span>
+                                    <span class="range-points">0-54 points</span>
+                                </div>
+                                <div class="range-description">Poor script quality with confusing flow, unclear messaging, no storytelling elements, missing call-to-action, and incoherent or missing narrative structure</div>
+                            </div>
+                        </div>
+                        <div class="score-input-section">
+                            <label class="score-input-label">Enter Score (0-100):</label>
+                            <input type="number" class="score-input" data-criterion="vid_script" data-weight="20" min="0" max="100" placeholder="0-100" oninput="updateScore(this)">
+                            <div class="score-feedback" id="feedback_vid_script"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <div class="criterion-title">Technical Production Quality</div>
+                        <div class="criterion-description">Video resolution, audio clarity, lighting, camera work, editing quality, transitions, graphics integration, and overall technical execution</div>
+                        <div class="criterion-weight">Weight: 20%</div>
+                    </div>
+                    <div class="scoring-section">
+                        <div class="score-ranges">
+                            <div class="score-range">
+                                <div class="range-header">
+                                    <span class="range-title">Excellent</span>
+                                    <span class="range-points">85-100 points</span>
+                                </div>
+                                <div class="range-description">Professional video quality with crystal clear audio, excellent lighting, smooth camera work, seamless editing, perfect transitions, and outstanding graphics integration</div>
+                            </div>
+                            <div class="score-range good">
+                                <div class="range-header">
+                                    <span class="range-title">Good</span>
+                                    <span class="range-points">70-84 points</span>
+                                </div>
+                                <div class="range-description">Good video quality with clear audio, adequate lighting, competent camera work, good editing, smooth transitions, and effective graphics integration</div>
+                            </div>
+                            <div class="score-range fair">
+                                <div class="range-header">
+                                    <span class="range-title">Fair</span>
+                                    <span class="range-points">55-69 points</span>
+                                </div>
+                                <div class="range-description">Adequate video quality with acceptable audio, basic lighting, simple camera work, basic editing, few transitions, and limited graphics integration</div>
+                            </div>
+                            <div class="score-range poor">
+                                <div class="range-header">
+                                    <span class="range-title">Poor</span>
+                                    <span class="range-points">0-54 points</span>
+                                </div>
+                                <div class="range-description">Poor video quality with unclear audio, bad lighting, poor camera work, minimal editing, no transitions, and poor or missing graphics integration</div>
+                            </div>
+                        </div>
+                        <div class="score-input-section">
+                            <label class="score-input-label">Enter Score (0-100):</label>
+                            <input type="number" class="score-input" data-criterion="vid_technical" data-weight="20" min="0" max="100" placeholder="0-100" oninput="updateScore(this)">
+                            <div class="score-feedback" id="feedback_vid_technical"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <div class="criterion-title">Visual Design & Graphics</div>
+                        <div class="criterion-description">Quality of animations, infographics, charts, visual aids, color scheme, typography, branding consistency, and visual appeal</div>
+                        <div class="criterion-weight">Weight: 15%</div>
+                    </div>
+                    <div class="scoring-section">
+                        <div class="score-ranges">
+                            <div class="score-range">
+                                <div class="range-header">
+                                    <span class="range-title">Excellent</span>
+                                    <span class="range-points">85-100 points</span>
+                                </div>
+                                <div class="range-description">Outstanding visual design with professional animations, excellent infographics and charts, consistent branding, appealing color scheme, and highly engaging visual appeal</div>
+                            </div>
+                            <div class="score-range good">
+                                <div class="range-header">
+                                    <span class="range-title">Good</span>
+                                    <span class="range-points">70-84 points</span>
+                                </div>
+                                <div class="range-description">Good visual design with effective animations, clear infographics, mostly consistent branding, appropriate color scheme, and appealing visual elements</div>
+                            </div>
+                            <div class="score-range fair">
+                                <div class="range-header">
+                                    <span class="range-title">Fair</span>
+                                    <span class="range-points">55-69 points</span>
+                                </div>
+                                <div class="range-description">Basic visual design with simple animations, adequate infographics, inconsistent branding, basic color scheme, and somewhat appealing visuals</div>
+                            </div>
+                            <div class="score-range poor">
+                                <div class="range-header">
+                                    <span class="range-title">Poor</span>
+                                    <span class="range-points">0-54 points</span>
+                                </div>
+                                <div class="range-description">Poor visual design with no animations, unclear infographics, no branding consistency, inappropriate color scheme, and unappealing or distracting visuals</div>
+                            </div>
+                        </div>
+                        <div class="score-input-section">
+                            <label class="score-input-label">Enter Score (0-100):</label>
+                            <input type="number" class="score-input" data-criterion="vid_visuals" data-weight="15" min="0" max="100" placeholder="0-100" oninput="updateScore(this)">
+                            <div class="score-feedback" id="feedback_vid_visuals"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="criterion">
+                    <div class="criterion-header">
+                        <div class="criterion-title">Audience Engagement & Accessibility</div>
+                        <div class="criterion-description">Target audience appropriateness, engagement techniques, accessibility features (subtitles, multiple languages), interactive elements, and viewer retention strategies</div>
+                        <div class="criterion-weight">Weight: 20%</div>
+                    </div>
+                    <div class="scoring-section">
+                        <div class="score-ranges">
+                            <div class="score-range">
+                                <div class="range-header">
+                                    <span class="range-title">Excellent</span>
+                                    <span class="range-points">85-100 points</span>
+                                </div>
+                                <div class="range-description">Perfect target audience fit with highly engaging techniques, comprehensive accessibility features, interactive elements throughout, and excellent viewer retention strategies</div>
+                            </div>
+                            <div class="score-range good">
+                                <div class="range-header">
+                                    <span class="range-title">Good</span>
+                                    <span class="range-points">70-84 points</span>
+                                </div>
+                                <div class="range-description">Good audience appropriateness with engaging content, basic accessibility features, some interactive elements, and effective retention strategies</div>
+                            </div>
+                            <div class="score-range fair">
+                                <div class="range-header">
+                                    <span class="range-title">Fair</span>
+                                    <span class="range-points">55-69 points</span>
+                                </div>
+                                <div class="range-description">Somewhat appropriate for target audience, moderately engaging, limited accessibility features, minimal interaction, and poor retention strategies</div>
+                            </div>
+                            <div class="score-range poor">
+                                <div class="range-header">
+                                    <span class="range-title">Poor</span>
+                                    <span class="range-points">0-54 points</span>
+                                </div>
+                                <div class="range-description">Inappropriate for target audience, not engaging, inaccessible design, no interactive elements, and very poor viewer retention</div>
+                            </div>
+                        </div>
+                        <div class="score-input-section">
+                            <label class="score-input-label">Enter Score (0-100):</label>
+                            <input type="number" class="score-input" data-criterion="vid_engagement" data-weight="20" min="0" max="100" placeholder="0-100" oninput="updateScore(this)">
+                            <div class="score-feedback" id="feedback_vid_engagement"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="comments-section">
+                <h4>Additional Comments & Detailed Feedback</h4>
+                <textarea id="assessorComments" placeholder="Provide detailed feedback including strengths, areas for improvement, specific recommendations, and suggestions for future projects..."></textarea>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection">
+                <h3>Assessment Results</h3>
+                <div class="score-display">
+                    <div class="score-item">
+                        <h4>Final Score</h4>
+                        <div class="value" id="totalScore">0.00</div>
+                        <small>/100</small>
+                    </div>
+                    <div class="score-item">
+                        <h4>Letter Grade</h4>
+                        <div class="value" id="letterGrade">-</div>
+                    </div>
+                    <div class="score-item">
+                        <h4>Course Points</h4>
+                        <div class="value" id="coursePoints">0.00</div>
+                        <small>/20</small>
+                    </div>
+                </div>
+
+                <div class="detailed-breakdown" id="detailedBreakdown">
+                    <h4 style="margin-bottom: 15px; text-align: center;">Detailed Score Breakdown</h4>
+                    <div id="breakdownItems"></div>
+                </div>
+                
+                <div class="grade-indicator" id="gradeIndicator">
+                    <span id="gradeDescription"></span>
+                </div>
+
+                <div class="export-buttons">
+                    <button class="export-btn" onclick="exportToPDF()">
+                        📄 Export to PDF
+                    </button>
+                    <button class="export-btn" onclick="exportToExcel()">
+                        📊 Export to Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentProject = '';
+        let scores = {};
+        let weights = {};
+
+        // Set current date and initialize member fields
+        document.getElementById('assessmentDate').value = new Date().toISOString().split('T')[0];
+        updateMemberFields();
+
+        function updateMemberFields() {
+            const memberCount = parseInt(document.getElementById('memberCount').value);
+            const membersGrid = document.getElementById('membersGrid');
+            membersGrid.innerHTML = '';
+
+            for (let i = 1; i <= memberCount; i++) {
+                const memberField = document.createElement('div');
+                memberField.className = 'member-field';
+                memberField.innerHTML = `
+                    <input type="text" id="member${i}Name" placeholder="Member ${i} Name (Optional)">
+                    <input type="text" id="member${i}Id" placeholder="Student ID (Optional)">
+                `;
+                membersGrid.appendChild(memberField);
+            }
+        }
+
+        function selectProject(projectType) {
+            currentProject = projectType;
+            
+            // Update button states
+            document.querySelectorAll('.project-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.project-btn.${projectType}`).classList.add('active');
+            
+            // Hide all rubric sections
+            document.querySelectorAll('.rubric-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show selected rubric
+            document.getElementById(`${projectType}-rubric`).classList.add('active');
+            
+            // Reset scores and results
+            scores = {};
+            weights = {};
+            document.getElementById('resultsSection').classList.remove('show');
+            
+            // Clear all score inputs
+            document.querySelectorAll('.score-input').forEach(input => {
+                input.value = '';
+                input.className = 'score-input';
+            });
+            
+            // Hide all feedback
+            document.querySelectorAll('.score-feedback').forEach(feedback => {
+                feedback.classList.remove('show');
+            });
+            
+            // Initialize score listeners
+            initializeScoreInputs();
+        }
+
+        function initializeScoreInputs() {
+            document.querySelectorAll('.score-input').forEach(input => {
+                const criterion = input.dataset.criterion;
+                const weight = parseInt(input.dataset.weight);
+                weights[criterion] = weight;
+            });
+        }
+
+        function updateScore(input) {
+            const criterion = input.dataset.criterion;
+            const score = parseFloat(input.value);
+            const feedback = document.getElementById(`feedback_${criterion}`);
+            
+            // Validate score range
+            if (score < 0 || score > 100 || isNaN(score)) {
+                input.classList.remove('excellent', 'good', 'fair', 'poor');
+                feedback.classList.remove('show');
+                delete scores[criterion];
+                updateResults();
+                return;
+            }
+            
+            // Store score
+            scores[criterion] = score;
+            
+            // Update input styling and feedback based on score
+            input.classList.remove('excellent', 'good', 'fair', 'poor');
+            feedback.classList.remove('excellent', 'good', 'fair', 'poor');
+            
+            let category, feedbackText;
+            if (score >= 85) {
+                category = 'excellent';
+                feedbackText = 'Excellent Performance';
+            } else if (score >= 70) {
+                category = 'good';
+                feedbackText = 'Good Performance';
+            } else if (score >= 55) {
+                category = 'fair';
+                feedbackText = 'Fair Performance';
+            } else {
+                category = 'poor';
+                feedbackText = 'Needs Improvement';
+            }
+            
+            input.classList.add(category);
+            feedback.classList.add(category, 'show');
+            feedback.textContent = `${feedbackText} (${score}/100)`;
+            
+            updateResults();
+        }
+
+        function updateResults() {
+            const currentRubricCriteria = getCurrentRubricCriteria();
+            const scoredCriteria = Object.keys(scores).filter(criterion => 
+                currentRubricCriteria.includes(criterion)
+            ).length;
+            
+            if (scoredCriteria === currentRubricCriteria.length && scoredCriteria > 0) {
+                calculateAndDisplayResults();
+                document.getElementById('resultsSection').classList.add('show');
+            } else {
+                document.getElementById('resultsSection').classList.remove('show');
+            }
+        }
+
+        function getCurrentRubricCriteria() {
+            const criteriaMap = {
+                'literature': ['lit_introduction', 'lit_methodology', 'lit_results', 'lit_discussion', 'lit_conclusions'],
+                'community': ['comm_assessment', 'comm_design', 'comm_materials', 'comm_delivery', 'comm_evaluation'],
+                'video': ['vid_content', 'vid_script', 'vid_technical', 'vid_visuals', 'vid_engagement']
+            };
+            return criteriaMap[currentProject] || [];
+        }
+
+        function calculateAndDisplayResults() {
+            const currentCriteria = getCurrentRubricCriteria();
+            let weightedSum = 0;
+            let totalWeight = 0;
+            
+            // Calculate weighted score for current project only
+            for (let criterion of currentCriteria) {
+                if (scores[criterion] !== undefined) {
+                    weightedSum += scores[criterion] * weights[criterion];
+                    totalWeight += weights[criterion];
+                }
+            }
+            
+            if (totalWeight === 0) return;
+            
+            const totalScore = weightedSum / totalWeight;
+            const letterGrade = getLetterGrade(totalScore);
+            const coursePoints = (totalScore / 100) * 20; // 20% of total course grade
+            
+            // Update display
+            document.getElementById('totalScore').textContent = totalScore.toFixed(2);
+            document.getElementById('letterGrade').textContent = letterGrade;
+            document.getElementById('coursePoints').textContent = coursePoints.toFixed(2);
+            
+            // Update detailed breakdown
+            updateDetailedBreakdown();
+            updateGradeIndicator(letterGrade, totalScore);
+        }
+
+        function updateDetailedBreakdown() {
+            const breakdownItems = document.getElementById('breakdownItems');
+            const currentCriteria = getCurrentRubricCriteria();
+            breakdownItems.innerHTML = '';
+            
+            let totalWeightedPoints = 0;
+            
+            for (let criterion of currentCriteria) {
+                if (scores[criterion] !== undefined) {
+                    const criterionName = getCriterionDisplayName(criterion);
+                    const score = scores[criterion];
+                    const weight = weights[criterion];
+                    const weightedPoints = (score * weight / 100).toFixed(2);
+                    totalWeightedPoints += parseFloat(weightedPoints);
+                    
+                    const breakdownItem = document.createElement('div');
+                    breakdownItem.className = 'breakdown-item';
+                    breakdownItem.innerHTML = `
+                        <span>${criterionName}</span>
+                        <span>${score}/100 (${weight}%) = ${weightedPoints} pts</span>
+                    `;
+                    breakdownItems.appendChild(breakdownItem);
+                }
+            }
+            
+            // Add total row
+            const totalItem = document.createElement('div');
+            totalItem.className = 'breakdown-item';
+            totalItem.style.borderTop = '2px solid rgba(255,255,255,0.5)';
+            totalItem.style.fontWeight = 'bold';
+            totalItem.innerHTML = `
+                <span>TOTAL WEIGHTED SCORE</span>
+                <span>${totalWeightedPoints.toFixed(2)} points</span>
+            `;
+            breakdownItems.appendChild(totalItem);
+        }
+
+        function getLetterGrade(score) {
+            if (score >= 85) return 'A';
+            if (score >= 70) return 'B';
+            if (score >= 55) return 'C';
+            if (score >= 40) return 'D';
+            return 'F';
+        }
+
+        function updateGradeIndicator(grade, score) {
+            const indicator = document.getElementById('gradeIndicator');
+            const description = document.getElementById('gradeDescription');
+            
+            // Remove all grade classes
+            indicator.className = 'grade-indicator';
+            
+            switch(grade) {
+                case 'A':
+                    indicator.classList.add('grade-a');
+                    description.textContent = `Excellent Performance - Exceeds Expectations (${score.toFixed(1)}/100)`;
+                    break;
+                case 'B':
+                    indicator.classList.add('grade-b');
+                    description.textContent = `Good Performance - Meets Expectations (${score.toFixed(1)}/100)`;
+                    break;
+                case 'C':
+                    indicator.classList.add('grade-c');
+                    description.textContent = `Satisfactory Performance - Basic Requirements Met (${score.toFixed(1)}/100)`;
+                    break;
+                case 'D':
+                    indicator.classList.add('grade-d');
+                    description.textContent = `Below Expectations - Improvement Needed (${score.toFixed(1)}/100)`;
+                    break;
+                default:
+                    indicator.classList.add('grade-d');
+                    description.textContent = `Unsatisfactory Performance - Significant Improvement Required (${score.toFixed(1)}/100)`;
+            }
+        }
+
+        function getProjectTypeTitle() {
+            switch(currentProject) {
+                case 'literature': return 'Literature Review';
+                case 'community': return 'Community Outreach Program';
+                case 'video': return 'Educational Video';
+                default: return 'Project Assessment';
+            }
+        }
+
+        function getGroupMembers() {
+            const memberCount = parseInt(document.getElementById('memberCount').value);
+            const members = [];
+            
+            for (let i = 1; i <= memberCount; i++) {
+                const name = document.getElementById(`member${i}Name`).value;
+                const id = document.getElementById(`member${i}Id`).value;
+                if (name || id) {
+                    members.push({
+                        name: name || 'N/A',
+                        id: id || 'N/A'
+                    });
+                }
+            }
+            return members;
+        }
+
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Header
+            doc.setFontSize(20);
+            doc.setTextColor(44, 62, 80);
+            doc.text('Group Project Assessment Report', 20, 25);
+            
+            doc.setFontSize(14);
+            doc.text(getProjectTypeTitle(), 20, 35);
+            
+            // Group Information
+            doc.setFontSize(12);
+            const groupName = document.getElementById('groupName').value || 'N/A';
+            const assessorName = document.getElementById('assessorName').value || 'N/A';
+            const assessmentDate = document.getElementById('assessmentDate').value || 'N/A';
+            const memberCount = document.getElementById('memberCount').value;
+            
+            let yPos = 50;
+            doc.text(`Group: ${groupName}`, 20, yPos);
+            doc.text(`Number of Members: ${memberCount}`, 20, yPos + 10);
+            doc.text(`Assessor: ${assessorName}`, 20, yPos + 20);
+            doc.text(`Date: ${assessmentDate}`, 20, yPos + 30);
+            
+            // Group Members
+            const members = getGroupMembers();
+            if (members.length > 0) {
+                yPos += 50;
+                doc.text('Group Members:', 20, yPos);
+                yPos += 10;
+                doc.setFontSize(10);
+                members.forEach((member, index) => {
+                    doc.text(`${index + 1}. ${member.name} (${member.id})`, 25, yPos);
+                    yPos += 8;
+                });
+                yPos += 10;
+            } else {
+                yPos += 50;
+            }
+            
+            // Assessment Results
+            doc.setFontSize(14);
+            doc.text('Assessment Results:', 20, yPos);
+            yPos += 15;
+            
+            doc.setFontSize(12);
+            const totalScore = document.getElementById('totalScore').textContent;
+            const letterGrade = document.getElementById('letterGrade').textContent;
+            const coursePoints = document.getElementById('coursePoints').textContent;
+            
+            doc.text(`Total Score: ${totalScore}`, 20, yPos);
+            doc.text(`Letter Grade: ${letterGrade}`, 20, yPos + 10);
+            doc.text(`Course Points: ${coursePoints}`, 20, yPos + 20);
+            
+            // Detailed breakdown
+            yPos += 40;
+            doc.setFontSize(12);
+            doc.text('Detailed Breakdown:', 20, yPos);
+            yPos += 15;
+            
+            doc.setFontSize(10);
+            for (let criterion in scores) {
+                const criterionName = getCriterionDisplayName(criterion);
+                const score = scores[criterion];
+                const weight = weights[criterion];
+                const weightedScore = (score * weight / 100).toFixed(2);
+                
+                doc.text(`${criterionName}:`, 20, yPos);
+                doc.text(`${score}/100 (Weight: ${weight}%) = ${weightedScore} points`, 25, yPos + 8);
+                yPos += 18;
+                
+                // Check if we need a new page
+                if (yPos > 270) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+            }
+            
+            // Comments
+            const comments = document.getElementById('assessorComments').value;
+            if (comments) {
+                yPos += 10;
+                if (yPos > 250) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+                doc.setFontSize(12);
+                doc.text('Assessor Comments:', 20, yPos);
+                yPos += 10;
+                doc.setFontSize(10);
+                const splitComments = doc.splitTextToSize(comments, 170);
+                doc.text(splitComments, 20, yPos);
+            }
+            
+            // Save PDF
+            const fileName = `${currentProject}_assessment_${groupName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+            doc.save(fileName);
+        }
+
+        function exportToExcel() {
+            const wb = XLSX.utils.book_new();
+            
+            // Group Assessment Data
+            const assessmentData = [
+                ['Group Project Assessment Report'],
+                [''],
+                ['Project Type', getProjectTypeTitle()],
+                ['Group Name', document.getElementById('groupName').value || 'N/A'],
+                ['Number of Members', document.getElementById('memberCount').value],
+                ['Assessor', document.getElementById('assessorName').value || 'N/A'],
+                ['Assessment Date', document.getElementById('assessmentDate').value || 'N/A'],
+                [''],
+                ['Group Members']
+            ];
+            
+            // Add group members
+            const members = getGroupMembers();
+            if (members.length > 0) {
+                assessmentData.push(['Name', 'Student ID']);
+                members.forEach(member => {
+                    assessmentData.push([member.name, member.id]);
+                });
+            } else {
+                assessmentData.push(['No member information provided']);
+            }
+            
+            assessmentData.push(['']);
+            assessmentData.push(['Assessment Results']);
+            assessmentData.push(['Total Score', document.getElementById('totalScore').textContent]);
+            assessmentData.push(['Letter Grade', document.getElementById('letterGrade').textContent]);
+            assessmentData.push(['Course Points', document.getElementById('coursePoints').textContent]);
+            
+            assessmentData.push(['']);
+            assessmentData.push(['Detailed Breakdown']);
+            assessmentData.push(['Criterion', 'Score', 'Weight (%)', 'Weighted Points']);
+            
+            // Add detailed scores
+            for (let criterion in scores) {
+                const criterionName = getCriterionDisplayName(criterion);
+                const score = scores[criterion];
+                const weight = weights[criterion];
+                const weightedScore = (score * weight / 100).toFixed(2);
+                
+                assessmentData.push([criterionName, `${score}/100`, weight, weightedScore]);
+            }
+            
+            // Add comments
+            const comments = document.getElementById('assessorComments').value;
+            if (comments) {
+                assessmentData.push(['']);
+                assessmentData.push(['Assessor Comments']);
+                assessmentData.push([comments]);
+            }
+            
+            const ws = XLSX.utils.aoa_to_sheet(assessmentData);
+            
+            // Set column widths
+            ws['!cols'] = [
+                { wch: 30 }, // Column A
+                { wch: 20 }, // Column B
+                { wch: 15 }, // Column C
+                { wch: 15 }  // Column D
+            ];
+            
+            XLSX.utils.book_append_sheet(wb, ws, 'Assessment Report');
+            
+            // Save Excel file
+            const groupName = document.getElementById('groupName').value || 'group';
+            const fileName = `${currentProject}_assessment_${groupName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+        }
+
+        function getCriterionDisplayName(criterion) {
+            const names = {
+                // Literature Review
+                'lit_introduction': 'Introduction & Background',
+                'lit_methodology': 'Methodology & Search Strategy',
+                'lit_results': 'Results & Analysis',
+                'lit_discussion': 'Discussion & Critical Analysis',
+                'lit_conclusions': 'Conclusions & Recommendations',
+                
+                // Community Outreach
+                'comm_assessment': 'Needs Assessment & Target Analysis',
+                'comm_design': 'Program Design & Learning Objectives',
+                'comm_materials': 'Educational Materials & Resources',
+                'comm_delivery': 'Implementation & Facilitation',
+                'comm_evaluation': 'Evaluation & Impact Measurement',
+                
+                // Video Project
+                'vid_content': 'Content Accuracy & Depth',
+                'vid_script': 'Script & Narrative Structure',
+                'vid_technical': 'Technical Production Quality',
+                'vid_visuals': 'Visual Design & Graphics',
+                'vid_engagement': 'Audience Engagement & Accessibility'
+            };
+            
+            return names[criterion] || criterion;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-select first project type
+            selectProject('literature');
+        });
+    </script>
+</body>
+</html>
